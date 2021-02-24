@@ -46,7 +46,7 @@ public:
      * @param sds The underlying @c SharedDataStream object.  If not specified, then this class will create its own.
      * @param maxNumReaders The maximum number of readers allowed.
      */
-    InProcessAttachment(const std::string& id, std::unique_ptr<SDSType> sds = nullptr, size_t maxNumReaders = 1);
+    InProcessAttachment(const std::string& id, std::unique_ptr<SDSType> sds = nullptr, size_t maxNumReaders = 2);
 
     std::unique_ptr<AttachmentWriter> createWriter(
         InProcessAttachmentWriter::SDSTypeWriter::Policy policy =
