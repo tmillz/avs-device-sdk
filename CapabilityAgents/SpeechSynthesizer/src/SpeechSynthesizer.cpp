@@ -16,6 +16,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <fstream>
 
 #include <AVSCommon/AVS/CapabilityConfiguration.h>
 #include <AVSCommon/Utils/JSON/JSONGenerator.h>
@@ -666,6 +667,23 @@ void SpeechSynthesizer::executePreHandleAfterValidation(std::shared_ptr<SpeakDir
         const std::string message("getAttachmentReaderFailed");
         ACSDK_ERROR(LX("executePreHandleFailed").d("reason", message));
         sendExceptionEncounteredAndReportFailed(speakInfo, avsCommon::avs::ExceptionErrorType::INTERNAL_ERROR, message);
+    }
+
+    // Trying to save alexa's response to mp3
+    speakInfo->attachmentReader = speakInfo->directive->getAttachmentReader(contentId, sds::ReaderPolicy::NONBLOCKING);
+    std::ofstream out("result.mp3");
+    if (out.is_open()) {
+        char buf[1024];
+        avsCommon::avs::attachment::AttachmentReader::ReadStatus status;
+        while (true) {
+            auto len = speakInfo->attachmentReader->read(buf, sizeof(buf), &status);
+            if (status == avsCommon::avs::attachment::AttachmentReader::ReadStatus::OK) {
+                out.write(buf, len);
+            } else if (status == avsCommon::avs::attachment::AttachmentReader::ReadStatus::CLOSED) {
+                break;
+            }
+        }
+        speakInfo->attachmentReader->close();
     }
 
     it = payload.FindMember(KEY_PLAY_BEHAVIOR);
